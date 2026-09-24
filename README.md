@@ -2,7 +2,7 @@
 
 A React, TypeScript, FastAPI, and PostgreSQL app for an agency workflow that will cover extra work, pricing, deadline changes, and client approvals.
 
-M2 implements owner access, one agency per owner, clients, and editable project baselines. The [PRD](docs/PRD.md) remains the product baseline. Approval requests, client review, payments, and dashboard totals belong to later milestones.
+M3 implements owner access, clients, projects, change requests, and email-verified client decisions. The [PRD](docs/PRD.md) remains the product baseline. Dashboard totals, print records, payments, and deployment belong to later milestones.
 
 ## Native local setup (no Docker required)
 
@@ -44,7 +44,7 @@ npm ci
 npm run dev
 ```
 
-Open [localhost:5173/register](http://localhost:5173/register). Register, open the verification email in Mailpit, verify, sign in, create an agency, add a client, and create/review a project. The baseline is the owner's record of an existing agreement; tax and billing are handled externally. Supported currencies: PKR, USD, GBP, EUR. Prices accept at most two decimal places, up to 90071992547409.91. Past delivery dates are allowed.
+Open [localhost:5173/register](http://localhost:5173/register). Register, open the verification email in Mailpit, verify, sign in, create an agency, add a client, and create a project. Open the project, create and preview a change request, then issue it. Copy the review link and open it in a separate browser session. Request a code, read it in Mailpit, verify, then approve or reject. Issuance does not send an invitation. The baseline is the owner's record of an existing agreement; tax and billing are handled externally. Supported currencies: PKR, USD, GBP, EUR. Prices accept at most two decimal places, up to 90071992547409.91. Past delivery dates are allowed.
 
 Stop the frontend/backend with Ctrl-C. To stop only this checkout's native services, load the same `.env` and run `scripts/local-services.py stop`. Restart with `start`; records persist. No helper drops databases or removes cluster data.
 
@@ -61,7 +61,7 @@ uv run --no-sync ruff format --check .
 uv run --no-sync pytest -q
 ```
 
-Tests delete data and exercise migration downgrade/upgrade paths in that dedicated database. They reject names without the `_test` suffix. Never point tests at valuable records. Migrations are always applied explicitly; the application and tests do not use `create_all`.
+Tests delete data and exercise migration downgrade/upgrade paths in that dedicated database. They reject names without the `_test` suffix. Never point tests at valuable records. Migrations are always applied explicitly; the application and tests do not use `create_all`. A virtual environment moved with the checkout can retain stale console-script paths and should be recreated.
 
 ```sh
 cd frontend

@@ -52,6 +52,10 @@ class ProjectOutput(RecordOutput):
     original_price_minor: int
     currency: str
     delivery_date: date
+    current_price_minor: int
+    current_delivery_date: date
+    terms_version: int
+    first_issued_at: datetime | None
 
 
 class Page[T](BaseModel):

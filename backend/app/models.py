@@ -9,12 +9,14 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     ForeignKeyConstraint,
+    Index,
     Integer,
     String,
     Text,
     UniqueConstraint,
+    text,
 )
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -89,6 +91,7 @@ class Client(Base):
 class Project(Base):
     __tablename__ = "projects"
     __table_args__ = (
+        UniqueConstraint("id", "agency_id", name="uq_project_agency"),
         ForeignKeyConstraint(
             ["client_id", "agency_id"],
             ["clients.id", "clients.agency_id"],
@@ -100,6 +103,10 @@ class Project(Base):
             name="ck_project_price",
         ),
         CheckConstraint("currency IN ('PKR', 'USD', 'GBP', 'EUR')", name="ck_project_currency"),
+        CheckConstraint(
+            "current_price_minor >= 0 AND current_price_minor <= 9007199254740991",
+            name="ck_project_current_price",
+        ),
     )
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     agency_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("agencies.id"), index=True)
@@ -110,7 +117,105 @@ class Project(Base):
     original_price_minor: Mapped[int] = mapped_column(BigInteger)
     currency: Mapped[str] = mapped_column(String(3))
     delivery_date: Mapped[date] = mapped_column(Date)
+    current_price_minor: Mapped[int] = mapped_column(BigInteger)
+    current_delivery_date: Mapped[date] = mapped_column(Date)
+    terms_version: Mapped[int] = mapped_column(Integer, default=0)
+    first_issued_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow
     )
+
+
+class ChangeRequest(Base):
+    __tablename__ = "change_requests"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["project_id", "agency_id"],
+            ["projects.id", "projects.agency_id"],
+            ondelete="RESTRICT",
+            name="fk_request_project_agency",
+        ),
+        CheckConstraint(
+            "status IN ('draft', 'pending', 'approved', 'rejected', 'withdrawn', 'expired')",
+            name="ck_request_status",
+        ),
+        CheckConstraint(
+            "additional_price_minor >= 0 AND additional_price_minor <= 9007199254740991",
+            name="ck_request_price",
+        ),
+        Index(
+            "uq_request_one_pending",
+            "project_id",
+            unique=True,
+            postgresql_where=text("status = 'pending'"),
+        ),
+    )
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    agency_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("agencies.id"), index=True)
+    project_id: Mapped[uuid.UUID] = mapped_column(index=True)
+    linked_from_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("change_requests.id"))
+    description: Mapped[str] = mapped_column(Text)
+    reason: Mapped[str] = mapped_column(Text)
+    extra_deliverables: Mapped[str] = mapped_column(Text)
+    additional_price_minor: Mapped[int] = mapped_column(BigInteger)
+    proposed_delivery_date: Mapped[date] = mapped_column(Date)
+    draft_terms_version: Mapped[int] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(String(12), default="draft")
+    snapshot: Mapped[dict | None] = mapped_column(JSONB)
+    issued_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    decision_name: Mapped[str | None] = mapped_column(String(120))
+    decision_email: Mapped[str | None] = mapped_column(String(320))
+    decision_reason: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+
+class RequestEvent(Base):
+    __tablename__ = "request_events"
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    request_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("change_requests.id", ondelete="RESTRICT")
+    )
+    action: Mapped[str] = mapped_column(String(30))
+    actor: Mapped[str] = mapped_column(String(20))
+    actor_email: Mapped[str | None] = mapped_column(String(320))
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ReviewAccessToken(Base):
+    __tablename__ = "review_access_tokens"
+    request_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("change_requests.id", ondelete="RESTRICT"), primary_key=True
+    )
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    rotated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class EmailChallenge(Base):
+    __tablename__ = "email_challenges"
+    request_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("change_requests.id", ondelete="RESTRICT"), primary_key=True
+    )
+    code_hash: Mapped[str] = mapped_column(String(255))
+    failed_attempts: Mapped[int] = mapped_column(Integer, default=0)
+    sent_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class ReviewSession(Base):
+    __tablename__ = "review_sessions"
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    request_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("change_requests.id", ondelete="RESTRICT"), index=True
+    )
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    csrf_hash: Mapped[str] = mapped_column(String(64))
+    email: Mapped[str] = mapped_column(String(320))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

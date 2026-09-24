@@ -5,7 +5,7 @@ export function Layout({ children }: { children: ReactNode }) {
   return <div className="shell">
     <header><a className="brand" href="/">Agency Change Approval</a><span className="tag">Owner workspace</span></header>
     <nav className="workspace links" aria-label="Workspace"><a href="/clients">Clients</a><a href="/projects">Projects</a><a href="/agency">Agency</a></nav><main>{children}</main>
-    <footer>Simple approval records for additional work. M2: clients and project baselines.</footer>
+    <footer>Simple approval records for additional work.</footer>
   </div>
 }
 

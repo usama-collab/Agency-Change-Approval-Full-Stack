@@ -3,6 +3,8 @@ import { AuthPage, type AuthKind } from './AuthPage'
 import { AgencyPage } from './AgencyPage'
 import { ClientsPage } from './ClientsPage'
 import { ProjectsPage } from './ProjectsPage'
+import { RequestsPage } from './RequestsPage'
+import { ReviewPage } from './ReviewPage'
 import { api, type Agency } from './api'
 import { Layout } from './ui'
 
@@ -17,6 +19,9 @@ export default function App() {
   if (['/register', '/login', '/forgot', '/reset', '/verify', '/resend'].includes(route)) return <AuthPage kind={route.slice(1) as AuthKind} />
   if (route === '/') return <Home />
   if (route === '/agency') return <AgencyPage />
+  if (route === '/review') return <ReviewPage />
+  const requestMatch = route.match(/^\/requests\/(new|[0-9a-f-]{36})$/)
+  if (requestMatch) return <RequestsPage id={requestMatch[1]} />
   const match = route.match(/^\/(clients|projects)(?:\/(new|[0-9a-f-]{36}))?$/)
   if (match) return match[1] === 'clients' ? <ClientsPage id={match[2]} /> : <ProjectsPage id={match[2]} />
   return <Layout><h1>Page not found</h1><a href="/">Go to your workspace</a></Layout>

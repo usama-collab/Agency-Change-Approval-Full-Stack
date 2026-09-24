@@ -2,7 +2,9 @@ export type Agency = { id: string; name: string; contact_name: string; contact_e
 export type Owner = { id: string; email: string; verified: boolean }
 
 export type Client = { id: string; name: string; company: string | null; email: string }
-export type Project = { id: string; client_id: string; title: string; baseline_deliverables: string; exclusions: string | null; original_price_minor: number; currency: string; delivery_date: string }
+export type Project = { id: string; client_id: string; title: string; baseline_deliverables: string; exclusions: string | null; original_price_minor: number; currency: string; delivery_date: string; current_price_minor: number; current_delivery_date: string; terms_version: number; first_issued_at: string | null }
+export type ChangeRequest = { id: string; project_id: string; linked_from_id: string | null; description: string; reason: string; extra_deliverables: string; additional_price_minor: number; proposed_delivery_date: string; draft_terms_version: number; status: string; snapshot: ProposalSnapshot | null; issued_at: string | null; expires_at: string | null; decided_at: string | null; decision_name: string | null; decision_email: string | null; decision_reason: string | null }
+export type ProposalSnapshot = { agency_name: string; agency_contact_name: string; agency_contact_email: string; client_name: string; client_company: string | null; approver_email: string; project_title: string; baseline_deliverables: string; exclusions: string | null; currency: string; original_price_minor: number; original_delivery_date: string; previously_approved_minor: number; old_total_minor: number; old_deadline: string; description: string; reason: string; extra_deliverables: string; additional_price_minor: number; new_total_minor: number; new_deadline: string }
 export type Page<T> = { items: T[]; total: number }
 export class ApiError extends Error {
   status: number
@@ -47,5 +49,21 @@ export async function api<T>(path: string, method = 'GET', body?: unknown): Prom
     throw new ApiError(detail, response.status)
   }
   if (response.status === 204) return undefined as T
+  return response.json() as Promise<T>
+}
+
+export async function reviewApi<T>(path: string, method = 'GET', body?: unknown): Promise<T> {
+  const headers: Record<string, string> = {}
+  if (method !== 'GET') {
+    headers['Content-Type'] = 'application/json'
+    headers['X-CSRF-Token'] = path === '/decision' ? decodeURIComponent(cookie('review_csrf')) : await csrfToken(true)
+  }
+  const response = await fetch(`/api/review${path}`, { method, headers, credentials: 'same-origin', body: body === undefined ? undefined : JSON.stringify(body) })
+  if (!response.ok) {
+    let detail = 'Something went wrong. Please retry.'
+    try { const data = await response.json(); if (typeof data.detail === 'string') detail = data.detail }
+    catch { /* retain generic message */ }
+    throw new ApiError(detail, response.status)
+  }
   return response.json() as Promise<T>
 }

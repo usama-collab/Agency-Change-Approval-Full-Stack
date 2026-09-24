@@ -9,10 +9,10 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.db import get_db
-from app.models import Agency, Client, Project
+from app.models import Agency, ChangeRequest, Client, Project
 
 Db = Annotated[Session, Depends(get_db)]
-Record = TypeVar("Record", Client, Project)
+Record = TypeVar("Record", Client, Project, ChangeRequest)
 
 
 def agency_for(db: Session, owner_id: uuid.UUID) -> uuid.UUID:

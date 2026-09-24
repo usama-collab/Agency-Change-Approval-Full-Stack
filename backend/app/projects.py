@@ -1,7 +1,7 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Query, Response
+from fastapi import APIRouter, HTTPException, Query, Response
 from sqlalchemy import func, select
 
 from app.auth import Current, WriteCurrent
@@ -36,7 +36,12 @@ def list_records(
 def create(payload: ProjectInput, current: WriteCurrent, db: Db) -> Project:
     agency_id = agency_for(db, current[0].id)
     owned(db, Client, payload.client_id, agency_id)
-    record = Project(agency_id=agency_id, **payload.model_dump())
+    record = Project(
+        agency_id=agency_id,
+        **payload.model_dump(),
+        current_price_minor=payload.original_price_minor,
+        current_delivery_date=payload.delivery_date,
+    )
     db.add(record)
     commit(db)
     return record
@@ -50,8 +55,34 @@ def detail(record_id: uuid.UUID, current: Current, db: Db) -> Project:
 @router.put("/{record_id}", response_model=ProjectOutput)
 def update(record_id: uuid.UUID, payload: ProjectInput, current: WriteCurrent, db: Db) -> Project:
     agency_id = agency_for(db, current[0].id)
-    record = owned(db, Project, record_id, agency_id)
+    record = db.scalar(
+        select(Project)
+        .where(Project.id == record_id, Project.agency_id == agency_id)
+        .with_for_update()
+    )
+    if record is None:
+        raise HTTPException(404, "Project not found")
     owned(db, Client, payload.client_id, agency_id)
+    locked_fields = (
+        "client_id",
+        "baseline_deliverables",
+        "exclusions",
+        "original_price_minor",
+        "currency",
+        "delivery_date",
+    )
+    if record.first_issued_at and any(
+        getattr(record, field) != getattr(payload, field) for field in locked_fields
+    ):
+        raise HTTPException(
+            409, "Project baseline and client are locked after the first request is issued"
+        )
+    if not record.first_issued_at and any(
+        getattr(record, field) != getattr(payload, field) for field in locked_fields
+    ):
+        record.current_price_minor = payload.original_price_minor
+        record.current_delivery_date = payload.delivery_date
+        record.terms_version += 1
     for key, value in payload.model_dump().items():
         setattr(record, key, value)
     commit(db)
