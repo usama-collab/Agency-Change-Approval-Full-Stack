@@ -1,0 +1,43 @@
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.secret
+*.token
+secrets/
+
+# Dependencies and caches
+**/.venv/
+**/node_modules/
+**/__pycache__/
+**/.pytest_cache/
+**/.ruff_cache/
+*.pyc
+.cache/
+
+# Local services, databases, and logs
+.local/
+pgdata/
+**/postgres-data/
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.log
+logs/
+
+# Generated output
+**/dist/
+**/build/
+**/*.tsbuildinfo
+.coverage
+htmlcov/
+.playwright-mcp/
+.DS_Store
