@@ -1,5 +1,7 @@
 # Agency Change Approval
 
+A React, TypeScript, FastAPI, and PostgreSQL app for an agency workflow that will cover extra work, pricing, deadline changes, and client approvals.
+
 M2 implements owner access, one agency per owner, clients, and editable project baselines. The [PRD](docs/PRD.md) remains the product baseline. Approval requests, client review, payments, and dashboard totals belong to later milestones.
 
 ## Native local setup (no Docker required)
