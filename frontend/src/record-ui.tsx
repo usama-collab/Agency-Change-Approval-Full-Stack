@@ -2,19 +2,20 @@ import { useEffect, useState } from 'react'
 import { api, type Agency } from './api'
 import { Message } from './ui'
 
-export function useLoad<T>(load: () => Promise<T>) {
+export function useLoad<T>(load: () => Promise<T>, requireAgency = true) {
   const [data, setData] = useState<T | null>(null)
   const [error, setError] = useState('')
   const [attempt, retry] = useState(0)
   useEffect(() => {
     let active = true
     setData(null); setError('')
-    api<Agency | null>('/agencies/me').then(a => {
+    const request = requireAgency ? api<Agency | null>('/agencies/me').then(a => {
       if (!a) { location.assign('/agency'); return null }
       return load()
-    }).then(value => { if (active) setData(value) }).catch(e => { if (active) setError(e.message) })
+    }) : load()
+    request.then(value => { if (active) setData(value) }).catch(e => { if (active) setError(e.message) })
     return () => { active = false }
-  }, [load, attempt])
+  }, [load, attempt, requireAgency])
   return { data, pending: !data, feedback: error ? <><Message notice={{ text: error, error: true }} /><button onClick={() => { setError(''); retry(attempt + 1) }}>Retry</button></> : !data ? <p role="status">Loading…</p> : null }
 }
 

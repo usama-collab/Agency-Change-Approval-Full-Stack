@@ -192,6 +192,35 @@ def request_detail(record_id: uuid.UUID, current: Current, db: Db):
     return output(record)
 
 
+@router.get("/api/requests/{record_id}/events")
+def request_events(
+    record_id: uuid.UUID,
+    current: Current,
+    db: Db,
+    limit: Annotated[int, Query(ge=1, le=100)] = 100,
+    offset: Annotated[int, Query(ge=0, le=1000000)] = 0,
+):
+    owned(db, ChangeRequest, record_id, agency_for(db, current[0].id))
+    query = select(RequestEvent).where(RequestEvent.request_id == record_id)
+    total = db.scalar(select(func.count()).select_from(query.subquery()))
+    events = db.scalars(
+        query.order_by(RequestEvent.occurred_at, RequestEvent.id).limit(limit).offset(offset)
+    ).all()
+    return {
+        "items": [
+            {
+                "id": item.id,
+                "action": item.action,
+                "actor": item.actor,
+                "actor_email": item.actor_email,
+                "occurred_at": item.occurred_at,
+            }
+            for item in events
+        ],
+        "total": total,
+    }
+
+
 @router.put("/api/requests/{record_id}")
 def update_request(record_id: uuid.UUID, payload: RequestInput, current: WriteCurrent, db: Db):
     project, record = locked_request(db, record_id, agency_for(db, current[0].id))

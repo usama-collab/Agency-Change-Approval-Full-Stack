@@ -23,7 +23,7 @@ export function AgencyPage() {
     const payload = { name: String(fields.get('name')), contact_name: String(fields.get('contact_name')), contact_email: String(fields.get('contact_email')) }
     try {
       const result = await api<Agency>(agency ? `/agencies/${agency.id}` : '/agencies', agency ? 'PUT' : 'POST', payload)
-      if (!agency) location.assign('/projects')
+      if (!agency) location.assign('/dashboard')
       setAgency(result)
       setNotice({ text: agency ? 'Agency profile updated.' : 'Agency profile created.' })
     } catch (error) { setNotice({ text: error instanceof Error ? error.message : 'Please retry.', error: true }) }

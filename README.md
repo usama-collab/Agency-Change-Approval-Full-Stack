@@ -2,7 +2,7 @@
 
 A React, TypeScript, FastAPI, and PostgreSQL app for an agency workflow that will cover extra work, pricing, deadline changes, and client approvals.
 
-M3 implements owner access, clients, projects, change requests, and email-verified client decisions. The [PRD](docs/PRD.md) remains the product baseline. Dashboard totals, print records, payments, and deployment belong to later milestones.
+M4 implements owner access, clients, projects, change requests, email-verified client decisions, an agency dashboard, request history, and browser-printable records. The [PRD](docs/PRD.md) remains the product baseline. Payments and deployment belong to later milestones.
 
 ## Native local setup (no Docker required)
 

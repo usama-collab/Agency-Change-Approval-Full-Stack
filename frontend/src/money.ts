@@ -9,3 +9,7 @@ export function priceText(minor: number): string {
   const value = BigInt(minor)
   return `${value / 100n}.${String(value % 100n).padStart(2, '0')}`
 }
+export function aggregatePriceText(minor: string): string {
+  const value = BigInt(minor)
+  return `${value / 100n}.${String(value % 100n).padStart(2, '0')}`
+}

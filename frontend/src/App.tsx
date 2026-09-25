@@ -4,13 +4,15 @@ import { AgencyPage } from './AgencyPage'
 import { ClientsPage } from './ClientsPage'
 import { ProjectsPage } from './ProjectsPage'
 import { RequestsPage } from './RequestsPage'
+import { DashboardPage } from './DashboardPage'
+import { PrintPage } from './PrintPage'
 import { ReviewPage } from './ReviewPage'
 import { api, type Agency } from './api'
 import { Layout } from './ui'
 
 function Home() {
   const [error, setError] = useState('')
-  useEffect(() => { api<Agency | null>('/agencies/me').then(a => location.replace(a ? '/projects' : '/agency')).catch(e => setError(e.message)) }, [])
+  useEffect(() => { api<Agency | null>('/agencies/me').then(a => location.replace(a ? '/dashboard' : '/agency')).catch(e => setError(e.message)) }, [])
   return <Layout>{error ? <p role="alert">{error} <a href="/">Retry</a></p> : <p role="status">Opening your workspace…</p>}</Layout>
 }
 
@@ -19,7 +21,11 @@ export default function App() {
   if (['/register', '/login', '/forgot', '/reset', '/verify', '/resend'].includes(route)) return <AuthPage kind={route.slice(1) as AuthKind} />
   if (route === '/') return <Home />
   if (route === '/agency') return <AgencyPage />
+  if (route === '/dashboard') return <DashboardPage />
   if (route === '/review') return <ReviewPage />
+  if (route === '/review/print') return <PrintPage kind="client" />
+  const printMatch = route.match(/^\/requests\/([0-9a-f-]{36})\/print$/)
+  if (printMatch) return <PrintPage kind="owner" id={printMatch[1]} />
   const requestMatch = route.match(/^\/requests\/(new|[0-9a-f-]{36})$/)
   if (requestMatch) return <RequestsPage id={requestMatch[1]} />
   const match = route.match(/^\/(clients|projects)(?:\/(new|[0-9a-f-]{36}))?$/)

@@ -235,6 +235,7 @@ def proposal(current: CurrentReview):
     record = current[0]
     return {
         "id": record.id,
+        "project_id": record.project_id,
         "status": effective_status(record),
         "snapshot": record.snapshot,
         "issued_at": record.issued_at,

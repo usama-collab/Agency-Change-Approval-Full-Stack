@@ -2,6 +2,7 @@ import { useCallback, useState, type FormEvent } from 'react'
 import { api, type ChangeRequest, type Project } from './api'
 import { parsePrice, priceText } from './money'
 import { ProposalView, timeText } from './ProposalView'
+import { allEvents, EventHistory } from './History'
 import { useLoad } from './record-ui'
 import { Layout, Message, type Notice } from './ui'
 
@@ -61,16 +62,17 @@ function IssuedRequest({ record }: { record: ChangeRequest }) {
     } catch (e) { setNotice({ text: e instanceof Error ? e.message : 'Please retry.', error: true }) }
     finally { setBusy(false) }
   }
-  return <><p>Status: <strong>{current.status}</strong>{current.expires_at && ` · Review expires ${timeText(current.expires_at)}`}</p>{current.status === 'pending' && <p className="muted">Pending means awaiting a decision; it does not confirm delivery or reading.</p>}<Message notice={notice} />{current.snapshot && <ProposalView snapshot={current.snapshot} />}{current.decided_at && <p>Decision by {current.decision_name} ({current.decision_email}) at {timeText(current.decided_at)}{current.decision_reason ? ` · Reason: ${current.decision_reason}` : ''}</p>}<div className="actions">{current.status === 'pending' && <><button disabled={busy} onClick={() => action('rotate-link')}>Replace lost link</button><button className="secondary" disabled={busy} onClick={() => action('withdraw')}>Withdraw request</button></>}{current.status !== 'pending' && <button className="secondary" disabled={busy} onClick={() => action('duplicate')}>Duplicate as draft</button>}</div>{link && <LinkBox link={link} />}</>
+  return <><p>Status: <strong>{current.status}</strong>{current.expires_at && ` · Review expires ${timeText(current.expires_at)}`}</p>{current.status === 'pending' && <p className="muted">Pending means awaiting a decision; it does not confirm delivery or reading.</p>}<Message notice={notice} />{current.snapshot && <ProposalView snapshot={current.snapshot} />}{current.decided_at && <p>Decision by {current.decision_name} ({current.decision_email}) at {timeText(current.decided_at)}{current.decision_reason ? ` · Reason: ${current.decision_reason}` : ''}</p>}<div className="actions"><a href={`/requests/${record.id}/print`}>Print record</a>{current.status === 'pending' && <><button disabled={busy} onClick={() => action('rotate-link')}>Replace lost link</button><button className="secondary" disabled={busy} onClick={() => action('withdraw')}>Withdraw request</button></>}{current.status !== 'pending' && <button className="secondary" disabled={busy} onClick={() => action('duplicate')}>Duplicate as draft</button>}</div>{link && <LinkBox link={link} />}</>
 }
 
 export function RequestsPage({ id }: { id: string }) {
   const projectId = new URLSearchParams(location.search).get('project_id')
   const load = useCallback(async () => {
-    if (id === 'new') { if (!projectId) throw new Error('Choose a project first.'); return { project: await api<Project>(`/projects/${projectId}`), record: undefined } }
+    if (id === 'new') { if (!projectId) throw new Error('Choose a project first.'); return { project: await api<Project>(`/projects/${projectId}`), record: undefined, history: undefined } }
     const record = await api<ChangeRequest>(`/requests/${id}`)
-    return { project: await api<Project>(`/projects/${record.project_id}`), record }
+    const [project, history] = await Promise.all([api<Project>(`/projects/${record.project_id}`), allEvents(id)])
+    return { project, record, history }
   }, [id, projectId])
   const { data, feedback } = useLoad(load)
-  return <Layout><div className="workspace"><h1>{id === 'new' ? 'New change request' : 'Change request'}</h1>{feedback}{data && <><p><a href={`/projects/${data.project.id}`}>Back to project</a></p><section className="card">{!data.record || data.record.status === 'draft' ? <RequestEditor record={data.record} project={data.project} /> : <IssuedRequest record={data.record} />}</section></>}</div></Layout>
+  return <Layout><div className="workspace"><h1>{id === 'new' ? 'New change request' : 'Change request'}</h1>{feedback}{data && <><p><a href={`/projects/${data.project.id}`}>Back to project</a></p><section className="card">{!data.record || data.record.status === 'draft' ? <RequestEditor record={data.record} project={data.project} /> : <IssuedRequest record={data.record} />}</section>{data.record?.linked_from_id && <p>Duplicated from <a href={`/requests/${data.record.linked_from_id}`}>earlier request</a>.</p>}{data.history && <section className="card"><EventHistory events={data.history} />{data.record?.status === 'expired' && <p>Review window ended at {timeText(data.record.expires_at!)}. Expiry may appear in history later when saved by a write.</p>}</section>}</>}</div></Layout>
 }

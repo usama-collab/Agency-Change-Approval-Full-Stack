@@ -6,6 +6,10 @@ export type Project = { id: string; client_id: string; title: string; baseline_d
 export type ChangeRequest = { id: string; project_id: string; linked_from_id: string | null; description: string; reason: string; extra_deliverables: string; additional_price_minor: number; proposed_delivery_date: string; draft_terms_version: number; status: string; snapshot: ProposalSnapshot | null; issued_at: string | null; expires_at: string | null; decided_at: string | null; decision_name: string | null; decision_email: string | null; decision_reason: string | null }
 export type ProposalSnapshot = { agency_name: string; agency_contact_name: string; agency_contact_email: string; client_name: string; client_company: string | null; approver_email: string; project_title: string; baseline_deliverables: string; exclusions: string | null; currency: string; original_price_minor: number; original_delivery_date: string; previously_approved_minor: number; old_total_minor: number; old_deadline: string; description: string; reason: string; extra_deliverables: string; additional_price_minor: number; new_total_minor: number; new_deadline: string }
 export type Page<T> = { items: T[]; total: number }
+export type RequestEvent = { id: string; action: string; actor: string; actor_email: string | null; occurred_at: string }
+export type RequestRow = { id: string; project_id: string; project_title: string; client_name: string; description: string; currency: string; additional_price_minor: number; status: string; created_at: string; issued_at: string | null; expires_at: string | null; decided_at: string | null }
+export type CurrencySummary = { currency: string; project_count: number; original_minor: string; approved_minor: string; current_minor: string; pending_minor: string }
+export type DashboardSummary = { as_of: string; status_counts: Record<string, number>; currencies: CurrencySummary[] }
 export class ApiError extends Error {
   status: number
   constructor(message: string, status: number) { super(message); this.status = status }
