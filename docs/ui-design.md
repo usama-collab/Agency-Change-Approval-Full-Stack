@@ -16,7 +16,7 @@ This document records the approved polish work after M1–M4. The [PRD](PRD.md) 
 | Phase | Work | Status |
 | --- | --- | --- |
 | 1 | Shared design foundations and dashboard as the representative screen | Implemented; awaiting review |
-| 2 | Client verification, proposal comparison, decision, confirmation, and client print | Awaiting approval |
+| 2 | Client verification, proposal comparison, decision, confirmation, and client print | Implemented; awaiting review |
 | 3 | Owner change request editor, preview, detail, history, and print | Awaiting approval |
 | 4 | Clients, projects, agency profile, and authentication | Awaiting approval |
 | 5 | Final consistency and accessibility pass; full frontend and owner/client flow checks | Awaiting approval |
@@ -50,3 +50,22 @@ User feedback: pending review.
 - Kept the Phase 1 visual direction and existing page behavior. Client verification, comparison, and decision screens still await Phase 2 design work.
 - Verification: frontend lint, typecheck, tests, build, and `git diff --check` passed. Login was reviewed in a browser at desktop and 375 px mobile width; no horizontal overflow appeared. Dashboard, client decision, and saved PDF flows were not repeated in this conversion pass.
 - Preview: [login](http://127.0.0.1:5174/login) while the local Vite server is running.
+
+## Phase 2 — client review and print
+
+Completed work:
+
+- Gave the client flow a clear verification, review, and decision sequence. The verification screen highlights the masked recipient and exact expiry, keeps proposal details behind the existing email check, and presents code sending and entry as distinct actions.
+- Added a client proposal layout that compares existing work with the requested addition, then shows original amount, earlier approved additions, current total, additional charge, proposed total, and all three delivery dates. Amounts use the existing integer money formatter and remain in one currency.
+- Separated approval and rejection forms with visible names, an unchecked agreement box for approval, and optional rejection reason. After a decision, confirmation and the print action appear before the proposal details. The client print record uses the same terms layout and includes decision identity, timestamp, and reason when present.
+- Preserved review routes, API contracts, token handling, decision rules, owner proposal view, and owner print view. No backend or database schema changed.
+
+Verification results (2026-09-25):
+
+- `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`, and `git diff --check` passed. Backend Ruff lint and format checks passed. All 17 PostgreSQL tests passed against the dedicated `agency_test` database after migrations, with `APP_ORIGIN=http://localhost:5173` matching the test client's origin. An initial run inherited the live dev origin (`http://127.0.0.1:5174`) and failed at the origin guard; no application change was needed.
+- Browser review at 1280×900 and 375×812 used local mocked review responses to check masked verification, proposal comparison, the unchecked agreement box, approval and rejection confirmations, rejection reason, print navigation, and no horizontal overflow. This visual fixture did not exercise live code delivery, session expiry, or backend decision persistence; those remain for the final owner/client flow check.
+- A browser saved A4 PDF of the sample approved record was inspected. Print controls were hidden and the record fit on one page after tightening print spacing. Longer real proposals may span pages.
+
+Preview: [client review](http://127.0.0.1:5174/review) requires a valid issued link to show the proposal; a verified review session is required for its print record.
+
+User feedback: pending review.
