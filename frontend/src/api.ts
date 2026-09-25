@@ -16,6 +16,7 @@ export class ApiError extends Error {
 }
 
 let redirectingToLogin = false
+let preloginCsrfRequest: Promise<string> | null = null
 
 function cookie(name: string): string {
   return document.cookie.split('; ').find((part) => part.startsWith(`${name}=`))?.split('=')[1] ?? ''
@@ -24,9 +25,13 @@ function cookie(name: string): string {
 async function csrfToken(prelogin: boolean): Promise<string> {
   const active = cookie('csrf')
   if (active && !prelogin) return decodeURIComponent(active)
-  const response = await fetch('/api/auth/csrf')
-  if (!response.ok) throw new Error('Could not start a secure request. Refresh and try again.')
-  return (await response.json()).csrf_token
+  if (!preloginCsrfRequest) {
+    preloginCsrfRequest = fetch('/api/auth/csrf').then(async response => {
+      if (!response.ok) throw new Error('Could not start a secure request. Refresh and try again.')
+      return (await response.json()).csrf_token as string
+    }).finally(() => { preloginCsrfRequest = null })
+  }
+  return preloginCsrfRequest
 }
 
 export async function api<T>(path: string, method = 'GET', body?: unknown): Promise<T> {
@@ -40,7 +45,9 @@ export async function api<T>(path: string, method = 'GET', body?: unknown): Prom
     body: body === undefined ? undefined : JSON.stringify(body),
   })
   if (!response.ok) {
-    let detail = 'Something went wrong. Please retry.'
+    let detail = response.status >= 500
+      ? 'The server could not complete this request. Check that the local backend and database are running, then retry.'
+      : 'Something went wrong. Please retry.'
     try {
       const data = await response.json()
       if (typeof data.detail === 'string') detail = data.detail
@@ -64,7 +71,9 @@ export async function reviewApi<T>(path: string, method = 'GET', body?: unknown)
   }
   const response = await fetch(`/api/review${path}`, { method, headers, credentials: 'same-origin', body: body === undefined ? undefined : JSON.stringify(body) })
   if (!response.ok) {
-    let detail = 'Something went wrong. Please retry.'
+    let detail = response.status >= 500
+      ? 'The server could not complete this request. Check that the local backend and database are running, then retry.'
+      : 'Something went wrong. Please retry.'
     try { const data = await response.json(); if (typeof data.detail === 'string') detail = data.detail }
     catch { /* retain generic message */ }
     throw new ApiError(detail, response.status)

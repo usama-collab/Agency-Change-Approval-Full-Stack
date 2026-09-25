@@ -17,7 +17,7 @@ This document records the approved polish work after M1–M4. The [PRD](PRD.md) 
 | --- | --- | --- |
 | 1 | Shared design foundations and dashboard as the representative screen | Implemented; awaiting review |
 | 2 | Client verification, proposal comparison, decision, confirmation, and client print | Implemented; awaiting review |
-| 3 | Owner change request editor, preview, detail, history, and print | Awaiting approval |
+| 3 | Owner change request editor, preview, detail, history, and print | Implemented; awaiting review |
 | 4 | Clients, projects, agency profile, and authentication | Awaiting approval |
 | 5 | Final consistency and accessibility pass; full frontend and owner/client flow checks | Awaiting approval |
 
@@ -69,3 +69,24 @@ Verification results (2026-09-25):
 Preview: [client review](http://127.0.0.1:5174/review) requires a valid issued link to show the proposal; a verified review session is required for its print record.
 
 User feedback: pending review.
+
+## Phase 3 — owner request and print
+
+Completed work:
+
+- Reworked the owner draft into a two-step edit and review flow. The saved preview now compares existing and additional work, separates original, earlier approved, current, added, and proposed amounts, and shows all three delivery dates. Editing a saved draft disables preview until the changes are saved, so the owner does not mistake an old preview for the current form.
+- Gave issued requests a clear status and decision summary, the frozen proposal layout used for client review, and a prominent print action. Review-link sharing has a dedicated panel. History is a dated timeline with actor information.
+- Matched the owner print record to the client record's terms layout while retaining owner-only history, status, timestamps, and decision details. No API, route, authentication, or database schema changed.
+
+Verification results (2026-09-25):
+
+- `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`, and `git diff --check` passed. Backend checks were not rerun for this UI-only phase.
+- Browser review with mocked local responses at 375 px showed the draft preview, amount and date comparison, history, and owner print record without horizontal overflow. The owner print record also had no horizontal overflow at 1280 px. Print media hid the print control. The visual fixture did not exercise real saving, issuance, link rotation, withdrawal, decision persistence, or a saved PDF; those remain for the final flow check.
+
+Preview: [projects](http://127.0.0.1:5174/projects) leads to the request editor for an authenticated owner; an issued request's print record is available from its detail page while the local Vite server is running.
+
+User feedback: pending review.
+
+Local demo follow-up (2026-09-25): Created Maya Chen at Northstar Studio, a USD 4,800 website project, and a USD 850 addition. The owner created, previewed, and issued the request; the client verified through local Mailpit and approved it; the owner detail, dashboard, history, and both print records loaded without errors. A separate USD 350 analytics addition remains as a draft for editor and preview review. The demo lives in the disposable `/tmp/agency-change-approval-ui/postgres` cluster.
+
+During this walkthrough, concurrent development-mode review access requests exposed a pre-login CSRF race. The frontend now shares an in-flight token request, and the review page retains the link token in memory while clearing it from the address bar. The live verification and approval flow passed after those changes.

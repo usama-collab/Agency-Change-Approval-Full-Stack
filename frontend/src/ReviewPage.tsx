@@ -9,12 +9,16 @@ type Proposal = { id: string; status: string; snapshot: ProposalSnapshot; issued
 const panel = 'rounded-2xl border border-line bg-white p-5 shadow-[0_8px_28px_#203d3108] sm:p-8'
 
 export function ReviewPage() {
-  const token = new URLSearchParams(location.hash.slice(1)).get('token')
+  const [token] = useState(() => new URLSearchParams(location.hash.slice(1)).get('token'))
   const [access, setAccess] = useState<Access | null>(null)
   const [proposal, setProposal] = useState<Proposal | null>(null)
   const [notice, setNotice] = useState<Notice | null>(null)
   const [busy, setBusy] = useState(false)
   const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (token && location.hash) history.replaceState(history.state, '', location.pathname + location.search)
+  }, [token])
 
   useEffect(() => {
     let active = true
