@@ -1,6 +1,7 @@
 # Working rules
 
 - `docs/PRD.md` is the product and milestone baseline. `docs/architecture.md` records implementation decisions; `docs/milestones.md` records progress. Keep the PRD intact unless a resolved clarification calls for a direct edit.
+- `docs/ui-design.md` records the approved UI direction, phased checklist, verification, and review feedback. Read it before UI work and continue the established design one approved phase at a time.
 - Build only the active milestone, M4: dashboard, history, print records, and currency-separated totals. Payments, team roles, AI, Redis, Celery, and deployment belong to later work.
 - Local setup: load `.env` from `.env.example`, then `scripts/install-mailpit.sh` and `scripts/local-services.py start` (native PostgreSQL 18 and Mailpit; see README for `PG_DATA_DIR` on mounted drives); `cd backend && uv sync --frozen --dev && uv run --no-sync alembic upgrade head && uv run --no-sync uvicorn app.main:app --reload`; `cd frontend && npm ci && npm run dev`. Mailpit inbox: `http://localhost:8025`.
 - Backend checks: `cd backend && uv run --no-sync ruff check . && uv run --no-sync ruff format --check . && uv run --no-sync pytest -q`. The native helper creates `agency_test`; set `DATABASE_URL=postgresql+psycopg://agency:agency@127.0.0.1:55433/agency_test` (match your `PG_PORT`), and run `uv run --no-sync alembic upgrade head` from `backend/`. Tests delete data in that dedicated database and reject names without `_test`.

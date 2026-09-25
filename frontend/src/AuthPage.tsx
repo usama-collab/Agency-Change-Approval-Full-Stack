@@ -41,9 +41,9 @@ export function AuthPage({ kind }: { kind: AuthKind }) {
     } finally { setBusy(false) }
   }
 
-  return <Layout><section className="card auth-card">
-    <p className="eyebrow">Agency workspace</p><h1>{labels[kind]}</h1>
-    <p className="muted">{kind === 'register' ? 'Start with a verified email. Your agency profile comes next.' : kind === 'verify' ? 'Confirm the address linked to your owner account.' : 'Enter your details below.'}</p>
+  return <Layout showWorkspace={false}><section className="max-w-[760px] rounded-2xl border border-line bg-white p-[clamp(24px,3vw,36px)] shadow-[0_8px_28px_#203d3108] max-[600px]:px-[18px] max-[600px]:py-[22px] [&_form+form]:mt-9 [&_form+form]:border-t [&_form+form]:border-line [&_form+form]:pt-6 [&_section+section]:mt-[30px] mx-auto mt-11 w-full !max-w-[480px] max-[600px]:mt-4">
+    <p className="mb-2 text-[.72rem] font-extrabold uppercase tracking-[.12em] text-accent">Agency workspace</p><h1>{labels[kind]}</h1>
+    <p className="mb-6 leading-[1.55] text-muted">{kind === 'register' ? 'Start with a verified email. Your agency profile comes next.' : kind === 'verify' ? 'Confirm the address linked to your owner account.' : 'Enter your details below.'}</p>
     <Message notice={notice} />
     <form onSubmit={submit}>
       {['register', 'login', 'forgot', 'resend'].includes(kind) && <label>Email address<input name="email" type="email" autoComplete="email" required /></label>}
@@ -51,6 +51,6 @@ export function AuthPage({ kind }: { kind: AuthKind }) {
       {(kind === 'verify' || kind === 'reset') && !token && <p role="alert">This link is missing its token. Request a new email.</p>}
       <button disabled={busy || ((kind === 'verify' || kind === 'reset') && !token)}>{busy ? 'Please wait…' : kind === 'verify' ? 'Verify email' : kind === 'forgot' ? 'Send reset link' : kind === 'resend' ? 'Send link' : kind === 'reset' ? 'Change password' : kind === 'register' ? 'Create account' : 'Sign in'}</button>
     </form>
-    <nav className="links"><a href="/login">Sign in</a><a href="/register">Create account</a><a href="/resend">Resend verification</a><a href="/forgot">Forgot password?</a></nav>
+    <nav className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[.9rem]"><a href="/login">Sign in</a><a href="/register">Create account</a><a href="/resend">Resend verification</a><a href="/forgot">Forgot password?</a></nav>
   </section></Layout>
 }

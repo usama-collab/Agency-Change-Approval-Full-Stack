@@ -4,7 +4,7 @@ The PRD is authoritative for product behavior. This document records the M1–M4
 
 `frontend/` is a React 19 + TypeScript Vite app. Vite proxies `/api` to FastAPI so browser requests use one origin. `backend/` is a synchronous FastAPI/SQLAlchemy 2 application with Alembic migrations. PostgreSQL stores users, sessions, email tokens, rate-limit buckets, agencies, clients, projects, requests, and review access. Mailpit receives development SMTP messages.
 
-Tailwind CSS v4 and its Vite plugin are installed for future UI work. `frontend/src/tailwind.css` is prepared but is not imported by the app; the current UI continues to use `frontend/src/style.css` only.
+The frontend uses Tailwind CSS v4 through its Vite plugin. `frontend/src/tailwind.css` defines shared theme colors and a small base layer for native elements; page and component layouts use utilities in TSX. A print page margin rule remains in CSS. The former `frontend/src/style.css` has been removed.
 
 Owner passwords use `pwdlib` Argon2. Session and email credentials are generated with Python `secrets`; only SHA-256 digests are stored in PostgreSQL. Session cookies are HttpOnly and SameSite=Lax, Secure when configured. A separate readable CSRF cookie holds a random token bound by hash to the database session; mutating endpoints check its header and the exact configured Origin. Prelogin mutations use a short-lived CSRF cookie and the same Origin check. Owner sessions last seven days, verification links 30 minutes, reset links 15 minutes. Links are one-use; new links invalidate old links of the same purpose. Password reset revokes all owner sessions.
 

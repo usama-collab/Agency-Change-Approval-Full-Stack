@@ -1,1 +1,35 @@
 @import 'tailwindcss';
+
+@theme {
+  --color-ink: #20312f;
+  --color-muted: #586c68;
+  --color-accent: #176b62;
+  --color-accent-hover: #10564f;
+  --color-line: #dce5e1;
+  --color-canvas: #f6f8f7;
+  --color-soft: #f8faf9;
+  --color-focus: #d38a25;
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+@layer base {
+  html { @apply bg-canvas text-ink font-sans; font-synthesis: none; }
+  body { @apply m-0 min-w-80; }
+  a { @apply text-accent underline underline-offset-3 hover:text-accent-hover; }
+  button { @apply inline-flex min-h-11 cursor-pointer items-center justify-center rounded-[9px] border border-accent bg-accent px-[18px] py-2.5 font-bold leading-[1.3] text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-55; }
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible { @apply outline-3 outline-offset-3 outline-focus; }
+  form { @apply grid gap-5; }
+  label { @apply grid gap-2 text-[.92rem] font-bold; }
+  input, select, textarea { @apply min-h-11 w-full rounded-[9px] border border-[#aebfb8] bg-white px-3 py-2.5 text-ink focus:border-accent; }
+  textarea { @apply resize-y; }
+  small { @apply font-normal text-muted; }
+  h1, h2, h3, p { @apply break-words; }
+  h1 { @apply mb-3 text-[clamp(2rem,3.5vw,2.55rem)] leading-[1.15] tracking-[-.04em] font-bold; }
+  h2 { @apply mb-2 text-[1.38rem] leading-[1.25] tracking-[-.025em] font-bold; }
+  h3 { @apply mb-2 text-[1.05rem] font-bold; }
+  dt { @apply mt-4 font-bold; }
+  dd { @apply my-1.5 whitespace-pre-wrap break-words; }
+  footer { @apply px-6 py-6 text-center text-[.8rem] text-[#687a75]; }
+}
+
+@page { size: auto; margin: 15mm; }

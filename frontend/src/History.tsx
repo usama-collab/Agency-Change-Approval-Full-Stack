@@ -8,7 +8,7 @@ const actionLabels: Record<string, string> = {
 }
 
 export function EventHistory({ events }: { events: RequestEvent[] }) {
-  return <section><h2>History</h2><ol className="event-list">{events.map(event => <li key={event.id}><strong>{actionLabels[event.action] || event.action}</strong> · {timeText(event.occurred_at)} · {event.actor}{event.actor_email ? ` (${event.actor_email})` : ''}</li>)}</ol></section>
+  return <section><h2>History</h2><ol className="[&_li]:mb-2.5 [&_li]:break-words">{events.map(event => <li key={event.id}><strong>{actionLabels[event.action] || event.action}</strong> · {timeText(event.occurred_at)} · {event.actor}{event.actor_email ? ` (${event.actor_email})` : ''}</li>)}</ol></section>
 }
 
 export async function allEvents(id: string): Promise<RequestEvent[]> {
